@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Сортировка массивов</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .logout-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .help-btn {
+            background: #17a2b8;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        input, select, button, textarea {
+            margin: 10px 5px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            cursor: pointer;
+            border: none;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+        }
+        .array-display {
+            background: #f4f4f4;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: monospace;
+            word-wrap: break-word;
+        }
+        .history-item {
+            background: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .array-scroll {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        .time-info {
+            color: #666;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+        h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+        .file-input-label {
+            display: inline-block;
+            background: #28a745;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        .file-input-label:hover {
+            background: #218838;
+        }
+        input[type="file"] {
+            display: none;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 25px;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 600px;
+            max-height: 80%;
+            overflow-y: auto;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .close {
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #666;
+        }
+        .close:hover {
+            color: #000;
+        }
+        .help-section {
+            margin-bottom: 20px;
+        }
+        .help-section h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        .help-section ul {
+            margin-left: 20px;
+        }
+        .help-section code {
+            background: #f4f4f4;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+        .hint {
+            font-size: 12px;
+            color: #666;
+            margin: 5px 0 0 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>Сортировка массивов (Bitonic Sort)</h2>
+            <div class="user-info">
+                <button class="help-btn" onclick="showHelp()">❓ Справка</button>
+                <span>Привет, {{ username }}!</span>
+                <button class="logout-btn" onclick="logout()">Выйти</button>
+            </div>
+        </div>
+
+        <!-- Ручной ввод массива -->
+        <div class="card">
+            <h3>✏️ Ручной ввод массива</h3>
+            <textarea id="manualInput" rows="3" placeholder="Введите целые числа через запятую, пробел или перенос строки&#10;Например: 5,3,8,1,9&#10;Или: 10 20 30 40 50"></textarea>
+            <div class="hint">💡 Поддерживаются только целые числа (например: -5, 0, 42)</div>
+            <button onclick="manualSort()">Сортировать</button>
+            <button onclick="clearManualInput()">Очистить</button>
+            <div id="manualResult"></div>
+        </div>
+
+        <!-- Генерация массива -->
+        <div class="card">
+            <h3>🎲 Генерация массива</h3>
+            <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center; margin-bottom: 15px;">
+                <div style="display: flex; align-items: center; gap: 5px;">
+                    <label for="minVal" style="font-weight: bold;">От:</label>
+                    <input type="number" id="minVal" value="1" style="width: 80px;">
+                </div>
+                <div style="display: flex; align-items: center; gap: 5px;">
+                    <label for="maxVal" style="font-weight: bold;">До:</label>
+                    <input type="number" id="maxVal" value="100" style="width: 80px;">
+                </div>
+                <div style="display: flex; align-items: center; gap: 5px;">
+                    <label for="sizeVal" style="font-weight: bold;">Количество:</label>
+                    <input type="number" id="sizeVal" value="10" style="width: 80px;">
+                </div>
+                <button onclick="generateArray()">Сгенерировать</button>
+            </div>
+            <div id="generatedArray" class="array-display"></div>
+        </div>
+
+        <!-- Загрузка из файла -->
+        <div class="card">
+            <h3>📁 Загрузка из файла</h3>
+            <label class="file-input-label">
+                📂 Выбрать файл .txt
+                <input type="file" id="fileInput" accept=".txt" onchange="loadFromFile()">
+            </label>
+            <button onclick="sortFromFile()">Сортировать загруженный массив</button>
+            <div id="fileResult"></div>
+        </div>
+
+        <!-- Результат сортировки -->
+        <div class="card">
+            <h3>📊 Результат сортировки</h3>
+            <div id="sortResult" class="array-display" style="min-height: 100px;">
+                <span style="color: #999;">Здесь появится результат сортировки...</span>
+            </div>
+        </div>
+
+        <!-- История сохранённых массивов -->
+        <div class="card">
+            <h3>💾 Мои сохранённые массивы</h3>
+            <button onclick="refreshHistory()">🔄 Загрузить историю</button>
+            <div id="history"></div>
+        </div>
+    </div>
+
+    <!-- Модальное окно справки -->
+    <div id="helpModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📖 Справка по использованию</h3>
+                <span class="close" onclick="closeHelp()">&times;</span>
+            </div>
+            <div class="help-section">
+                <h4>🎯 О программе</h4>
+                <p>Программа сортирует массивы целых чисел с помощью алгоритма <strong>Bitonic Sort</strong> (Битонная сортировка).</p>
+            </div>
+            <div class="help-section">
+                <h4>✏️ Ручной ввод массива</h4>
+                <p>Введите числа в текстовое поле. Поддерживаются форматы:</p>
+                <ul>
+                    <li>Через запятую: <code>5,3,8,1,9</code></li>
+                    <li>Через пробел: <code>5 3 8 1 9</code></li>
+                    <li>В столбик: <code>5<br>3<br>8</code></li>
+                    <li>Смешанный формат: <code>5, 3 8,1 9</code></li>
+                </ul>
+            </div>
+            <div class="help-section">
+                <h4>🎲 Генерация случайного массива</h4>
+                <ul>
+                    <li><strong>От/До</strong> - диапазон значений элементов</li>
+                    <li><strong>Количество</strong> - размер массива (1-1000)</li>
+                    <li>Нажмите "Сгенерировать" - массив появится в поле ввода</li>
+                </ul>
+            </div>
+            <div class="help-section">
+                <h4>📁 Загрузка из файла</h4>
+                <ul>
+                    <li>Поддерживаются файлы <strong>.txt</strong></li>
+                    <li>Числа в файле могут быть разделены пробелами, запятыми или переносами строк</li>
+                    <li>Пример содержимого файла: <code>10 20 30 40 50</code></li>
+                </ul>
+            </div>
+            <div class="help-section">
+                <h4>💾 Сохранение в историю</h4>
+                <ul>
+                    <li>После сортировки нажмите "Сохранить в историю"</li>
+                    <li>Все сохранённые массивы привязаны к вашему аккаунту</li>
+                    <li>Историю можно просмотреть по кнопке "Загрузить историю"</li>
+                </ul>
+            </div>
+            <div class="help-section">
+                <h4>⚡ Алгоритм Bitonic Sort</h4>
+                <ul>
+                    <li>Временная сложность: O(n log² n)</li>
+                    <li>Параллельный алгоритм сортировки</li>
+                    <li>Хорошо подходит для аппаратной реализации</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let loadedFromFileArray = null;
+
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.innerHTML = message;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 12px 20px;
+                border-radius: 8px;
+                font-size: 14px;
+                font-weight: bold;
+                z-index: 10000;
+                animation: slideIn 0.3s ease-out;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                background: ${type === 'success' ? '#28a745' : (type === 'error' ? '#dc3545' : '#17a2b8')};
+                color: white;
+            `;
+            document.body.appendChild(notification);
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease-in';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        function parseInputString(text) {
+            let cleaned = text.replace(/[ \n\r\t]+/g, ',');
+            let numbers = cleaned.split(',').filter(x => x.trim() !== '');
+            let result = [];
+            let invalid = [];
+
+            for (let num of numbers) {
+                let trimmed = num.trim();
+                if (/^-?\d+$/.test(trimmed)) {
+                    result.push(parseInt(trimmed, 10));
+                } else {
+                    invalid.push(trimmed);
+                }
+            }
+
+            return { valid: invalid.length === 0, numbers: result, invalid: invalid };
+        }
+
+        async function manualSort() {
+            const inputText = document.getElementById('manualInput').value;
+            if (!inputText.trim()) {
+                showNotification('Введите массив чисел', 'error');
+                return;
+            }
+
+            const result = parseInputString(inputText);
+            if (!result.valid) {
+                showNotification(`Некорректные значения: ${result.invalid.slice(0, 3).join(', ')}. Вводите только целые числа!`, 'error');
+                return;
+            }
+
+            if (result.numbers.length === 0) {
+                showNotification('Не найдено чисел', 'error');
+                return;
+            }
+
+            await performSort(result.numbers);
+        }
+
+        async function generateArray() {
+            const min = parseInt(document.getElementById('minVal').value);
+            const max = parseInt(document.getElementById('maxVal').value);
+            const size = parseInt(document.getElementById('sizeVal').value);
+
+            if (isNaN(min) || isNaN(max) || isNaN(size)) {
+                showNotification('Заполните все поля', 'error');
+                return;
+            }
+
+            if (size > 10000) {
+                showNotification('Максимальный размер массива - 10000', 'error');
+                return;
+            }
+
+            if (min > max) {
+                showNotification('Min не может быть больше Max', 'error');
+                return;
+            }
+
+            const response = await fetch('/api/generate', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({min, max, size})
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                document.getElementById('manualInput').value = data.array.join(',');
+                document.getElementById('generatedArray').innerHTML = '✅ Сгенерированный массив: [' + data.array.join(', ') + ']';
+                await performSort(data.array);
+            }
+        }
+
+        function loadFromFile() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            if (!file) {
+                showNotification('Выберите файл', 'error');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const result = parseInputString(e.target.result);
+                if (!result.valid) {
+                    showNotification(`Ошибка в файле: ${result.invalid.slice(0, 3).join(', ')} - не целые числа`, 'error');
+                    return;
+                }
+
+                if (result.numbers.length === 0) {
+                    showNotification('В файле нет чисел', 'error');
+                    return;
+                }
+
+                loadedFromFileArray = result.numbers;
+                document.getElementById('manualInput').value = loadedFromFileArray.join(',');
+                document.getElementById('fileResult').innerHTML = '<div class="array-display" style="background:#d4edda;">✅ Загружено ' + loadedFromFileArray.length + ' чисел</div>';
+                showNotification('Файл загружен!', 'success');
+            };
+            reader.readAsText(file);
+        }
+
+        async function sortFromFile() {
+            if (!loadedFromFileArray || loadedFromFileArray.length === 0) {
+                showNotification('Сначала загрузите файл', 'error');
+                return;
+            }
+            await performSort(loadedFromFileArray);
+        }
+
+        async function performSort(array) {
+            const response = await fetch('/api/sort', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({array: array.join(',')})
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                let html = '<strong>📊 Исходный массив:</strong> [' + data.original.join(', ') + ']<br>';
+                html += '<strong>✅ Отсортированный массив:</strong> [' + data.sorted.join(', ') + ']<br>';
+                html += '<span class="time-info">⏱️ Время сортировки: ' + data.time + ' сек.</span><br>';
+                html += '<button onclick="saveArray(\'' + data.original.join(',') + '\')">💾 Сохранить в историю</button>';
+                document.getElementById('sortResult').innerHTML = html;
+                showNotification('Сортировка выполнена!', 'success');
+            } else {
+                document.getElementById('sortResult').innerHTML = '<div style="color:red;">❌ Ошибка: ' + data.error + '</div>';
+                showNotification('Ошибка сортировки', 'error');
+            }
+        }
+
+        async function saveArray(array) {
+            const response = await fetch('/api/save', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({array})
+            });
+            const data = await response.json();
+            if (data.success) {
+                showNotification('✅ Массив сохранён!', 'success');
+                refreshHistory();
+            } else {
+                showNotification('❌ Ошибка сохранения', 'error');
+            }
+        }
+
+        async function loadHistory() {
+            const historyDiv = document.getElementById('history');
+            historyDiv.innerHTML = '<p>⏳ Загрузка...</p>';
+
+            try {
+                const response = await fetch('/api/my_arrays');
+                const data = await response.json();
+
+                let html = '';
+                if (data.success && data.arrays && data.arrays.length > 0) {
+                    for (let arr of data.arrays) {
+                        html += '<div class="history-item">';
+                        html += '<div><strong>📥 Исходный:</strong></div>';
+                        html += '<div class="array-scroll">[' + arr.original + ']</div>';
+                        html += '<div style="margin-top: 8px;"><strong>📤 Отсортированный:</strong></div>';
+                        html += '<div class="array-scroll">[' + arr.sorted + ']</div>';
+                        html += '<div class="time-info">📅 ' + arr.created_at + '</div>';
+                        html += '</div>';
+                    }
+                } else {
+                    html = '<p>📭 Нет сохранённых массивов</p>';
+                }
+                historyDiv.innerHTML = html;
+            } catch (error) {
+                historyDiv.innerHTML = '<p style="color:red;">❌ Ошибка загрузки</p>';
+            }
+        }
+
+        async function refreshHistory() {
+            await loadHistory();
+            showNotification('История обновлена', 'info');
+        }
+
+        function clearManualInput() {
+            document.getElementById('manualInput').value = '';
+            document.getElementById('manualResult').innerHTML = '';
+            showNotification('Поле очищено', 'info');
+        }
+
+        function showHelp() {
+            document.getElementById('helpModal').style.display = 'block';
+        }
+
+        function closeHelp() {
+            document.getElementById('helpModal').style.display = 'none';
+        }
+
+        async function logout() {
+            const response = await fetch('/logout', {method: 'POST'});
+            const data = await response.json();
+            if (data.success) {
+                showNotification('👋 До свидания!', 'success');
+                setTimeout(() => { window.location.href = '/login'; }, 1500);
+            }
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('helpModal');
+            if (event.target === modal) modal.style.display = 'none';
+        }
+
+        loadHistory();
+    </script>
+</body>
+</html>
